@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SwiftDrop - Login</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=DM+Sans:wght@400;500;600&display=swap"
+        rel="stylesheet" />
+    <link href="../public/css/swiftdrop.css" rel="stylesheet" />
+    <style>
+        .erro-msg {
+            display: none;
+            color: #e05252;
+            font-size: 0.8rem;
+            margin-top: 0.75rem;
+            text-align: center;
+            background: rgba(224, 82, 82, 0.08);
+            border: 1px solid rgba(224, 82, 82, 0.25);
+            border-radius: 8px;
+            padding: 0.5rem 0.75rem;
+        }
+
+        @keyframes shakeX {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            20% {
+                transform: translateX(-6px);
+            }
+
+            40% {
+                transform: translateX(6px);
+            }
+
+            60% {
+                transform: translateX(-4px);
+            }
+
+            80% {
+                transform: translateX(4px);
+            }
+        }
+    </style>
+</head>
+
+<body class="login-page">
+
+    <div class="card-wrapper">
+        <div class="brand">SwiftDrop</div>
+        <p class="brand-sub">Bem-vindo de volta</p>
+
+        <div class="card-box">
+            <!-- Tabs -->
+            <div class="tab-switcher">
+                <button class="tab-btn active" onclick="switchTab('login')">Entrar</button>
+                <button class="tab-btn" onclick="switchTab('cadastro')">Cadastrar</button>
+            </div>
+
+            <!-- LOGIN -->
+            <div class="form-panel active" id="panel-login">
+                <div class="form-group">
+                    <label class="form-label">E-mail</label>
+                    <input type="email" class="form-control" id="login-email" placeholder="seu@email.com" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Senha</label>
+                    <input type="password" class="form-control" id="login-senha" placeholder="••••••••" />
+                </div>
+                <div class="forgot" onclick="location.href='esqueci-senha.html'">Esqueci minha senha</div>
+                <div class="erro-msg" id="erro-login"></div>
+                <button class="btn-primary-custom" id="btn-login">Entrar</button>
+                <div class="divider">ou</div>
+                <div class="switch-link">
+                    Não tem conta? <span onclick="switchTab('cadastro')">Criar conta</span>
+                </div>
+            </div>
+
+            <!-- CADASTRO -->
+            <div class="form-panel" id="panel-cadastro">
+                <div class="form-group">
+                    <label class="form-label">Nome completo</label>
+                    <input type="text" class="form-control" id="cadastro-nome" placeholder="Seu nome" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">E-mail</label>
+                    <input type="email" class="form-control" id="cadastro-email" placeholder="seu@email.com" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Senha</label>
+                    <input type="password" class="form-control" id="cadastro-senha" placeholder="Mínimo 8 caracteres" />
+                </div>
+                <div class="erro-msg" id="erro-cadastro"></div>
+                <button class="btn-primary-custom" id="btn-cadastro">Criar conta</button>
+                <div class="divider">ou</div>
+                <div class="switch-link">
+                    Já tem conta? <span onclick="switchTab('login')">Entrar</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../public/js/login.js"></script>
+</body>
+
+</html>
