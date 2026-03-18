@@ -12,10 +12,10 @@ function switchTab(tab) {
     document.getElementById('erro-cadastro').style.display = 'none';
 }
 
-window.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('DOMContentLoaded', async () => {
 
     // Se já tem sessão, vai direto ao home
-    if (window.auth.getSessao()) {
+    if (window.auth.getSession()) {
         location.href = '../main/index.html';
         return;
     }
@@ -37,7 +37,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 
     // ── LOGIN ──
-    document.getElementById('btn-login')?.addEventListener('click', () => {
+    document.getElementById('btn-login')?.addEventListener('click', async () => {
         const email = document.getElementById('login-email').value.trim();
         const senha = document.getElementById('login-senha').value;
         setErro('erro-login', '');
@@ -45,14 +45,14 @@ window.addEventListener('DOMContentLoaded', () => {
         if (!email) { shake('login-email'); setErro('erro-login', 'Digite seu e-mail.'); return; }
         if (!senha) { shake('login-senha'); setErro('erro-login', 'Digite sua senha.'); return; }
 
-        const res = window.auth.login(email, senha);
+        const res = await window.auth.login(email, senha);
         if (!res.ok) { shake('login-email'); shake('login-senha'); setErro('erro-login', res.erro); return; }
 
         location.href = '../main/index.html';
     });
 
     // ── CADASTRO ──
-    document.getElementById('btn-cadastro')?.addEventListener('click', () => {
+    document.getElementById('btn-cadastro')?.addEventListener('click', async () => {
         const nome = document.getElementById('cadastro-nome').value.trim();
         const email = document.getElementById('cadastro-email').value.trim();
         const senha = document.getElementById('cadastro-senha').value;
@@ -63,11 +63,11 @@ window.addEventListener('DOMContentLoaded', () => {
         if (!email.includes('@')) { shake('cadastro-email'); setErro('erro-cadastro', 'E-mail inválido.'); return; }
         if (senha.length < 8) { shake('cadastro-senha'); setErro('erro-cadastro', 'A senha precisa ter no mínimo 8 caracteres.'); return; }
 
-        const res = window.auth.cadastrar(nome, email, senha);
+        const res = await window.auth.register(nome, email, senha);
         if (!res.ok) { shake('cadastro-email'); setErro('erro-cadastro', res.erro); return; }
 
         // Login automático após cadastro
-        window.auth.login(email, senha);
+        await window.auth.login(email, senha);
         location.href = '../main/index.html';
     });
 

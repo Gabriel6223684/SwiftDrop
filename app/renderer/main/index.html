@@ -11,6 +11,300 @@
     <link href="../public/css/swiftdrop.css" rel="stylesheet" />
     <style>
         /* ── USER MENU ── */
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .notification-center {
+            position: relative;
+            display: none;
+        }
+
+        .notification-btn {
+            position: relative;
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: var(--input-bg);
+            color: var(--text);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            transition: border-color 0.2s, transform 0.2s;
+        }
+
+        .notification-btn:hover {
+            border-color: var(--accent);
+            transform: translateY(-1px);
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            min-width: 20px;
+            height: 20px;
+            padding: 0 6px;
+            border-radius: 999px;
+            background: #e05252;
+            color: #fff;
+            font-size: 0.72rem;
+            font-weight: 700;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid var(--bg);
+        }
+
+        .notification-badge.show {
+            display: flex;
+        }
+
+        .notification-panel {
+            display: none;
+            position: absolute;
+            top: calc(100% + 0.75rem);
+            right: 0;
+            width: min(380px, calc(100vw - 2rem));
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+            z-index: 300;
+            animation: fadeUp 0.2s ease forwards;
+        }
+
+        .notification-panel.open {
+            display: block;
+        }
+
+        .notification-panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem 1rem 0.85rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .notification-panel-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .notification-panel-actions {
+            display: flex;
+            gap: 0.4rem;
+        }
+
+        .notification-action {
+            background: transparent;
+            color: var(--muted);
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            padding: 0.35rem 0.65rem;
+            font-size: 0.72rem;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .notification-action:hover {
+            color: var(--text);
+            border-color: var(--accent);
+        }
+
+        .notification-list {
+            max-height: 360px;
+            overflow-y: auto;
+            padding: 0.5rem;
+        }
+
+        .notification-empty {
+            padding: 1.4rem 1rem;
+            text-align: center;
+            color: var(--muted);
+            font-size: 0.88rem;
+        }
+
+        .notification-item {
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            gap: 0.75rem;
+            padding: 0.85rem;
+            border-radius: 14px;
+            margin-bottom: 0.45rem;
+            background: rgba(255, 255, 255, 0.025);
+            border: 1px solid transparent;
+            transition: border-color 0.2s, background 0.2s;
+        }
+
+        .notification-item:hover {
+            border-color: var(--border);
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .notification-item.unread {
+            background: rgba(201, 168, 76, 0.09);
+            border-color: rgba(201, 168, 76, 0.16);
+        }
+
+        .notification-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            flex-shrink: 0;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .notification-icon.info {
+            color: #7ab8ff;
+        }
+
+        .notification-icon.success {
+            color: #52c97a;
+        }
+
+        .notification-icon.warning {
+            color: #e0a84c;
+        }
+
+        .notification-icon.error {
+            color: #e05252;
+        }
+
+        .notification-content {
+            min-width: 0;
+        }
+
+        .notification-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 0.2rem;
+        }
+
+        .notification-body {
+            font-size: 0.8rem;
+            color: var(--muted);
+            line-height: 1.45;
+            word-break: break-word;
+        }
+
+        .notification-meta {
+            margin-top: 0.45rem;
+            font-size: 0.72rem;
+            color: var(--muted);
+        }
+
+        .notification-item-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+        }
+
+        .notification-mini-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--muted);
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .notification-mini-btn:hover {
+            color: var(--text);
+            border-color: var(--accent);
+        }
+
+        .notification-toast-stack {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 700;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            pointer-events: none;
+        }
+
+        .notification-toast {
+            min-width: 280px;
+            max-width: 340px;
+            background: rgba(18, 18, 24, 0.96);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--accent);
+            color: var(--text);
+            border-radius: 14px;
+            box-shadow: 0 18px 48px rgba(0, 0, 0, 0.34);
+            padding: 0.85rem 0.95rem;
+            animation: toastIn 0.24s ease;
+            pointer-events: auto;
+        }
+
+        .notification-toast.success {
+            border-left-color: #52c97a;
+        }
+
+        .notification-toast.warning {
+            border-left-color: #e0a84c;
+        }
+
+        .notification-toast.error {
+            border-left-color: #e05252;
+        }
+
+        .notification-toast-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .notification-toast-title {
+            font-size: 0.88rem;
+            font-weight: 700;
+        }
+
+        .notification-toast-close {
+            border: none;
+            background: transparent;
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 0.95rem;
+        }
+
+        .notification-toast-body {
+            font-size: 0.8rem;
+            color: var(--muted);
+            line-height: 1.45;
+        }
+
+        @keyframes toastIn {
+            from {
+                opacity: 0;
+                transform: translateY(-12px) translateX(12px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) translateX(0);
+            }
+        }
+
         .user-menu {
             position: relative;
         }
@@ -187,7 +481,6 @@
             color: var(--text);
         }
 
-        /* Foto */
         .foto-wrap {
             display: flex;
             flex-direction: column;
@@ -246,7 +539,6 @@
             color: var(--muted);
         }
 
-        /* Form */
         .form-group {
             margin-bottom: 1rem;
         }
@@ -359,6 +651,8 @@
 
 <body>
 
+    <div class="notification-toast-stack" id="notification-toast-stack"></div>
+
     <!-- HEADER -->
     <header>
         <div class="container">
@@ -368,21 +662,46 @@
                     <a href="index.html" class="nav-link active-link">Home</a>
                 </nav>
 
-                <!-- Visitante -->
-                <button class="btn-login" id="btn-login-header"
-                    onclick="location.href='../pages/login.html'">Login</button>
+                <div class="header-actions">
+                    <!-- Visitante -->
+                    <button class="btn-login" id="btn-login-header"
+                        onclick="location.href='../pages/login.html'">Login</button>
 
-                <!-- Logado -->
-                <div class="user-menu" id="user-menu" style="display:none;">
-                    <button class="user-btn" onclick="toggleDropdown()">
-                        <div class="user-avatar" id="header-avatar"></div>
-                        <span class="user-name" id="header-nome"></span>
-                        ▾
-                    </button>
-                    <div class="dropdown" id="dropdown">
-                        <button class="dropdown-item" onclick="abrirModal()">✏️ &nbsp;Editar perfil</button>
-                        <div class="dropdown-sep"></div>
-                        <button class="dropdown-item danger" onclick="fazerLogout()">↩ &nbsp;Sair</button>
+                    <!-- Notificações -->
+                    <div class="notification-center" id="notification-center">
+                        <button class="notification-btn" onclick="toggleNotifications()" title="Notificações">
+                            🔔
+                            <span class="notification-badge" id="notification-badge">0</span>
+                        </button>
+
+                        <div class="notification-panel" id="notification-panel">
+                            <div class="notification-panel-header">
+                                <span class="notification-panel-title">Notificações</span>
+                                <div class="notification-panel-actions">
+                                    <button class="notification-action" onclick="markAllNotificationsAsRead()">Ler
+                                        todas</button>
+                                    <button class="notification-action" onclick="clearNotifications()">Limpar</button>
+                                </div>
+                            </div>
+                            <div class="notification-list" id="notification-list">
+                                <div class="notification-empty">Nenhuma notificação por enquanto.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Logado -->
+                    <div class="user-menu" id="user-menu" style="display:none;">
+                        <button class="user-btn" onclick="toggleDropdown()">
+                            <div class="user-avatar" id="header-avatar"></div>
+                            <span class="user-name" id="header-nome"></span>
+                            ▾
+                        </button>
+                        <div class="dropdown" id="dropdown">
+                            <button class="dropdown-item" onclick="abrirModal()">✏️ &nbsp;Editar perfil</button>
+                            <button class="dropdown-item" onclick="demoNotification()">🔔 &nbsp;Testar notificação</button>
+                            <div class="dropdown-sep"></div>
+                            <button class="dropdown-item danger" onclick="fazerLogout()">↩ &nbsp;Sair</button>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -3,8 +3,29 @@
 
 let novaFotoBase64 = undefined;
 
-window.addEventListener('DOMContentLoaded', () => {
+// ── NOTIFICATIONS ──
+let currentNotificationState = { items: [], unreadCount: 0 };
+let notificationPanelOpen = false;
+
+const NOTIFICATION_ICONS = {
+    info: 'ℹ️',
+    success: '✅',
+    warning: '⚠️',
+    error: '❌'
+};
+
+const NOTIFICATION_COLORS = {
+    info: '#7ab8ff',
+    success: '#52c97a',
+    warning: '#e0a84c',
+    error: '#e05252'
+};
+
+window.addEventListener('DOMContentLoaded', async () => {
     atualizarHeader();
+
+    // Initialize notifications
+    await initNotifications();
 
     // Fecha dropdown ao clicar fora
     document.addEventListener('click', (e) => {
@@ -12,12 +33,17 @@ window.addEventListener('DOMContentLoaded', () => {
         if (menu && !menu.contains(e.target)) {
             document.getElementById('dropdown')?.classList.remove('open');
         }
+
+        // Fecha notification panel
+        if (!e.target.closest('#notification-center')) {
+            closeNotificationPanel();
+        }
     });
 });
 
 // ── HEADER ──
 function atualizarHeader() {
-    const sessao = window.auth.getSessao();
+    const sessao = window.auth.getSession();
     const btnLogin = document.getElementById('btn-login-header');
     const userMenu = document.getElementById('user-menu');
     const heroCta = document.getElementById('hero-cta');
@@ -26,7 +52,7 @@ function atualizarHeader() {
         btnLogin.style.display = 'none';
         userMenu.style.display = 'block';
         renderizarAvatar(sessao, document.getElementById('header-avatar'));
-        document.getElementById('header-nome').textContent = sessao.nome.split(' ')[0];
+        document.getElementById('header-nome').textContent = (sessao.username || sessao.nome || sessao.email).split(' ')[0];
         if (heroCta) { heroCta.textContent = 'Acompanhar entregas'; heroCta.href = '#'; }
     } else {
         btnLogin.style.display = 'block';
@@ -48,6 +74,167 @@ function renderizarAvatar(sessao, container) {
     }
 }
 
+// ── NOTIFICATIONS INIT ──
+async function initNotifications() {
+    // Listen for updates
+    window.notifications.onUpdated((state) => {
+        currentNotificationState = state;
+        updateNotificationBadge();
+        if (notificationPanelOpen) {
+            renderNotifications();
+        }
+    });
+
+    // Handle native notification clicks
+    window.notifications.onNativeClick((notification) => {
+        showToast(`Clicou na notificação: ${notification.title}`, 'info');
+        // Focus window handled by main process
+    });
+
+    // Initial fetch
+    const state = await window.notifications.list();
+    currentNotificationState = state;
+    updateNotificationBadge();
+}
+
+// ── NOTIFICATION UI ──
+function updateNotificationBadge() {
+    const badge = document.getElementById('notification-badge');
+    const count = document.getElementById('notification-center');
+
+    if (currentNotificationState.unreadCount > 0) {
+        badge.textContent = currentNotificationState.unreadCount > 99 ? '99+' : currentNotificationState.unreadCount;
+        badge.classList.add('show');
+    } else {
+        badge.classList.remove('show');
+    }
+}
+
+function toggleNotifications() {
+    const panel = document.getElementById('notification-panel');
+    const center = document.getElementById('notification-center');
+
+    notificationPanelOpen = !notificationPanelOpen;
+
+    if (notificationPanelOpen) {
+        panel.classList.add('open');
+        renderNotifications();
+        center.classList.add('active'); // Optional highlight
+    } else {
+        closeNotificationPanel();
+    }
+}
+
+function closeNotificationPanel() {
+    const panel = document.getElementById('notification-panel');
+    const center = document.getElementById('notification-center');
+
+    panel.classList.remove('open');
+    notificationPanelOpen = false;
+    center.classList.remove('active');
+}
+
+// ── RENDER ──
+async function renderNotifications() {
+    const list = document.getElementById('notification-list');
+
+    if (currentNotificationState.items.length === 0) {
+        list.innerHTML = '<div class="notification-empty">Nenhuma notificação por enquanto.</div>';
+        return;
+    }
+
+    list.innerHTML = currentNotificationState.items.map(item => `
+        <div class="notification-item ${item.read ? '' : 'unread'}" data-id="${item.id}">
+            <div class="notification-icon ${item.type}" style="background: ${NOTIFICATION_COLORS[item.type] || '#7ab8ff'}20;">
+                ${NOTIFICATION_ICONS[item.type] || 'ℹ️'}
+            </div>
+            <div class="notification-content">
+                <div class="notification-title">${escapeHtml(item.title)}</div>
+                <div class="notification-body">${escapeHtml(item.body)}</div>
+                <div class="notification-meta">${formatTime(item.createdAt)}</div>
+            </div>
+            <div class="notification-item-actions">
+                <button class="notification-mini-btn" onclick="markNotificationAsRead(${item.id})" title="Marcar como lida">✓</button>
+                <button class="notification-mini-btn" onclick="removeNotification(${item.id})" title="Remover">×</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+// ── ACTIONS ──
+async function markNotificationAsRead(id) {
+    await window.notifications.markAsRead(id);
+    renderNotifications();
+}
+
+async function markAllNotificationsAsRead() {
+    await window.notifications.markAllAsRead();
+    renderNotifications();
+}
+
+async function removeNotification(id) {
+    await window.notifications.remove(id);
+    renderNotifications();
+}
+
+async function clearNotifications() {
+    await window.notifications.clear();
+    renderNotifications();
+}
+
+function demoNotification() {
+    window.notifications.create({
+        title: 'Teste de Notificação',
+        body: 'Sistema funcionando perfeitamente! 🔔',
+        type: 'success',
+        persistent: true
+    });
+}
+
+// ── TOAST ──
+function showToast(message, type = 'info') {
+    const stack = document.getElementById('notification-toast-stack');
+    const toast = document.createElement('div');
+    toast.className = `notification-toast ${type}`;
+    toast.innerHTML = `
+        <div class="notification-toast-header">
+            <span class="notification-toast-title">${type.charAt(0).toUpperCase() + type.slice(1)}</span>
+            <button class="notification-toast-close" onclick="this.parentElement.parentElement.parentElement.remove()">×</button>
+        </div>
+        <div class="notification-toast-body">${escapeHtml(message)}</div>
+    `;
+
+    stack.appendChild(toast);
+
+    // Auto remove
+    setTimeout(() => {
+        if (toast.parentElement) {
+            toast.style.animation = 'none';
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateY(-12px)';
+            setTimeout(() => toast.remove(), 200);
+        }
+    }, 5000);
+}
+
+// ── UTILS ──
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function formatTime(isoString) {
+    const date = new Date(isoString);
+    const now = new Date();
+    const diff = Math.floor((now - date) / 1000 / 60); // minutes
+
+    if (diff < 1) return 'Agora';
+    if (diff < 60) return `${diff}m`;
+    if (diff < 1440) return `${Math.floor(diff / 60)}h`;
+    return `${Math.floor(diff / 1440)}d`;
+}
+
 // ── DROPDOWN ──
 function toggleDropdown() {
     document.getElementById('dropdown').classList.toggle('open');
@@ -62,7 +249,7 @@ function fazerLogout() {
 
 // ── MODAL ABRIR ──
 function abrirModal() {
-    const sessao = window.auth.getSessao();
+    const sessao = window.auth.getSession();
     if (!sessao) return;
     novaFotoBase64 = undefined;
 
@@ -84,6 +271,7 @@ function abrirModal() {
     }
 
     document.getElementById('dropdown').classList.remove('open');
+    closeNotificationPanel(); // Close notifications if open
     document.getElementById('modal-overlay').classList.add('open');
 }
 
@@ -117,7 +305,7 @@ function carregarFoto(event) {
 
 // ── SALVAR PERFIL ──
 function salvarPerfil() {
-    const sessao = window.auth.getSessao();
+    const sessao = window.auth.getSession();
     if (!sessao) return;
     const novoNome = document.getElementById('modal-nome').value.trim();
     const erroEl = document.getElementById('modal-erro');

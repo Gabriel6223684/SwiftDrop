@@ -1,163 +1,38 @@
-/* ── NAVEGAÇÃO ENTRE ETAPAS ── */
-function goToStep2() {
-    const email = document.getElementById('email-input').value.trim();
-    if (!email || !email.includes('@')) {
-        shake('email-input');
-        return;
-    }
-    document.getElementById('email-display').textContent = email;
-    setStep(2);
-    startTimer();
-    setTimeout(() => document.querySelector('.code-digit').focus(), 300);
-}
-
-function goToStep3() {
-    const digits = [...document.querySelectorAll('.code-digit')];
-    const code = digits.map(d => d.value).join('');
-    if (code.length < 6) {
-        digits.forEach(d => shake2(d));
-        return;
-    }
-    setStep(3);
-}
-
-function goToSuccess() {
-    const pw1 = document.getElementById('pw1').value;
-    const pw2 = document.getElementById('pw2').value;
-    if (pw1.length < 8) { shake('pw1'); return; }
-    if (pw1 !== pw2) { shake('pw2'); return; }
-    // Esconde o indicador de steps no sucesso
-    document.getElementById('steps-indicator').style.display = 'none';
-    setStep('success');
-}
-
-function goBack(step) { setStep(step); }
-
-function setStep(n) {
-    document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
-    document.getElementById('step-' + n).classList.add('active');
-    if (n === 'success') return;
-    // Atualiza dots
-    for (let i = 1; i <= 3; i++) {
-        const dot = document.getElementById('dot-' + i);
-        dot.classList.remove('active', 'done');
-        if (i < n) dot.classList.add('done');
-        if (i == n) dot.classList.add('active');
-    }
-    // Atualiza linhas
-    for (let i = 1; i <= 2; i++) {
-        const line = document.getElementById('line-' + i);
-        line.classList.toggle('done', i < n);
-    }
-}
-
-/* ── CODE INPUT: auto-avançar ── */
-document.querySelectorAll('.code-digit').forEach((input, idx, all) => {
-    input.addEventListener('input', e => {
-        const val = e.target.value.replace(/\D/g, '');
-        e.target.value = val.slice(-1);
-        if (val && idx < all.length - 1) all[idx + 1].focus();
-    });
-    input.addEventListener('keydown', e => {
-        if (e.key === 'Backspace' && !input.value && idx > 0) all[idx - 1].focus();
-    });
-    input.addEventListener('paste', e => {
-        e.preventDefault();
-        const pasted = (e.clipboardData.getData('text') || '').replace(/\D/g, '').slice(0, 6);
-        [...pasted].forEach((ch, i) => { if (all[i]) all[i].value = ch; });
-        if (all[Math.min(pasted.length, 5)]) all[Math.min(pasted.length, 5)].focus();
-    });
-});
-
-/* ── TIMER REENVIO ── */
-let timerInterval;
-function startTimer() {
-    clearInterval(timerInterval);
-    let secs = 60;
-    document.getElementById('countdown').textContent = secs;
-    document.getElementById('resend-btn').style.display = 'none';
-    document.getElementById('timer-text').style.display = 'inline';
-    timerInterval = setInterval(() => {
-        secs--;
-        document.getElementById('countdown').textContent = secs;
-        if (secs <= 0) {
-            clearInterval(timerInterval);
-            document.getElementById('resend-btn').style.display = 'inline';
-            document.getElementById('timer-text').style.display = 'none';
-        }
-    }, 1000);
-}
-
-function restartTimer() { startTimer(); }
-
-/* ── FORÇA DA SENHA ── */
-function checkStrength() {
-    const pw = document.getElementById('pw1').value;
-    const segs = [document.getElementById('seg1'), document.getElementById('seg2'),
-    document.getElementById('seg3'), document.getElementById('seg4')];
-    const label = document.getElementById('strength-label');
-    let score = 0;
-    if (pw.length >= 8) score++;
-    if (/[A-Z]/.test(pw)) score++;
-    if (/[0-9]/.test(pw)) score++;
-    if (/[^A-Za-z0-9]/.test(pw)) score++;
-
-    const cls = ['', 'weak', 'medium', 'medium', 'strong'];
-    const texts = ['', 'Fraca', 'Razoável', 'Boa', 'Forte'];
-    segs.forEach((s, i) => {
-        s.className = 'strength-seg';
-        if (i < score) s.classList.add(cls[score]);
-    });
-    label.textContent = pw.length ? texts[score] : '';
-    label.style.color = score === 4 ? '#52c97a' : score >= 2 ? '#e0a84c' : '#e05252';
-}
-
-/* ── TOGGLE SENHA ── */
-function togglePw(id, btn) {
-    const input = document.getElementById(id);
-    const isHidden = input.type === 'password';
-    input.type = isHidden ? 'text' : 'password';
-    btn.textContent = isHidden ? '🙈' : '👁';
-}
-
-/* ── SHAKE ANIMATION ── */
-function shake(id) {
-    const el = document.getElementById(id);
-    el.style.animation = 'none';
-    el.offsetHeight;
-    el.style.animation = 'shakeX 0.4s ease';
-}
-function shake2(el) {
-    el.style.animation = 'none';
-    el.offsetHeight;
-    el.style.animation = 'shakeX 0.4s ease';
-}
-
-// functions
-// ── esqueci-senha.js ──
-// Roda na página esqueci-senha.html
+/* ── esqueci-senha.js ── Real Email Integration */
 
 // Guarda o e-mail confirmado entre as etapas
 let emailConfirmado = '';
 
-// ── ETAPA 1: valida e-mail ──
-// Sobrescreve a função goToStep2 definida no HTML
-window.goToStep2 = function () {
+// ── ETAPA 1: Enviar código real ──
+window.goToStep2 = async function () {
     const email = document.getElementById('email-input').value.trim();
+    const erroEl = document.getElementById('erro-email');
+    erroEl.style.display = 'none';
 
     if (!email || !email.includes('@')) {
         shake('email-input');
+        erroEl.textContent = 'E-mail inválido';
+        erroEl.style.display = 'block';
         return;
     }
 
-    if (!window.auth.emailExiste(email)) {
+    const exists = await window.auth.emailExists(email);
+    if (!exists) {
         shake('email-input');
-        document.getElementById('email-input').style.borderColor = '#e05252';
-        setErro('erro-email', 'E-mail não encontrado. Verifique e tente novamente.');
+        erroEl.textContent = 'E-mail não cadastrado';
+        erroEl.style.display = 'block';
         return;
     }
 
-    setErro('erro-email', '');
+    const res = await window.auth.sendResetCode(email);
+    if (!res.ok) {
+        shake('email-input');
+        erroEl.textContent = res.error || 'Erro ao enviar código';
+        erroEl.style.display = 'block';
+        return;
+    }
+
+    console.log('🔑 Debug - Código enviado:', res.code);
     emailConfirmado = email;
     document.getElementById('email-display').textContent = email;
     setStep(2);
@@ -165,47 +40,55 @@ window.goToStep2 = function () {
     setTimeout(() => document.querySelector('.code-digit')?.focus(), 300);
 };
 
-// ── ETAPA 2: valida código (simulado) ──
-window.goToStep3 = function () {
+// ── ETAPA 2: Verificar código real ──
+window.goToStep3 = async function () {
     const digits = [...document.querySelectorAll('.code-digit')];
     const code = digits.map(d => d.value).join('');
 
     if (code.length < 6) {
-        digits.forEach(d => {
-            d.style.animation = 'none';
-            d.offsetHeight;
-            d.style.animation = 'shakeX 0.4s ease';
-        });
+        digits.forEach(d => shake2(d));
         return;
     }
 
-    // Aqui você pode validar o código real quando tiver um backend
-    // Por ora, qualquer código de 6 dígitos é aceito
+    const res = await window.auth.verifyResetCode(emailConfirmado, code);
+    if (!res.ok) {
+        digits.forEach(d => shake2(d));
+        // Show error toast
+        const toast = document.createElement('div');
+        toast.style.cssText = 'position:fixed;top:20px;right:20px;background:#e05252;color:white;padding:1rem 1.5rem;border-radius:8px;z-index:10000;font-family:sans-serif;box-shadow:0 4px 12px rgba(0,0,0,0.3);';
+        toast.textContent = res.error;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 4000);
+        return;
+    }
+
     setStep(3);
 };
 
-// ── ETAPA 3: redefine senha ──
-window.goToSuccess = function () {
+// ── ETAPA 3: Redefinir senha real ──
+window.goToSuccess = async function () {
     const pw1 = document.getElementById('pw1').value;
     const pw2 = document.getElementById('pw2').value;
-
-    setErro('erro-senha', '');
+    const erroEl = document.getElementById('erro-senha');
+    erroEl.style.display = 'none';
 
     if (pw1.length < 8) {
         shake('pw1');
-        setErro('erro-senha', 'A senha precisa ter no mínimo 8 caracteres.');
+        erroEl.textContent = 'Senha mínima: 8 caracteres';
+        erroEl.style.display = 'block';
         return;
     }
     if (pw1 !== pw2) {
         shake('pw2');
-        setErro('erro-senha', 'As senhas não coincidem.');
+        erroEl.textContent = 'Senhas não coincidem';
+        erroEl.style.display = 'block';
         return;
     }
 
-    const res = window.auth.redefinirSenha(emailConfirmado, pw1);
-
+    const res = await window.auth.resetPassword(emailConfirmado, pw1);
     if (!res.ok) {
-        setErro('erro-senha', res.erro);
+        erroEl.textContent = res.error;
+        erroEl.style.display = 'block';
         return;
     }
 
@@ -213,18 +96,20 @@ window.goToSuccess = function () {
     setStep('success');
 };
 
-// ── HELPER de erro ──
-function setErro(id, msg) {
-    const el = document.getElementById(id);
-    if (!el) return;
-    el.textContent = msg;
-    el.style.display = msg ? 'block' : 'none';
-}
-
+// ── HELPERS ──
 function shake(id) {
     const el = document.getElementById(id);
-    if (!el) return;
     el.style.animation = 'none';
     el.offsetHeight;
     el.style.animation = 'shakeX 0.4s ease';
 }
+
+function shake2(el) {
+    el.style.animation = 'none';
+    el.offsetHeight;
+    el.style.animation = 'shakeX 0.4s ease';
+}
+
+// Mantém funções originais do HTML (step nav, timer, etc.)
+const originalSetStep = window.setStep;
+window.setStep = originalSetStep;
