@@ -1,5 +1,5 @@
 const appEl = document.getElementById("app")
-const API = 'http://localhost:3000/api'
+const API = 'http://192.168.2.24:3000/api'
 
 let currentUser = null
 let conversations = []
