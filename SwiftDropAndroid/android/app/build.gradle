@@ -1,6 +1,22 @@
 apply plugin: 'com.android.application'
 
 android {
+    signingConfigs {
+    release {
+        storeFile file("release-key.keystore")
+        storePassword "2009luiz"
+        keyAlias "my-key"
+        keyPassword "2009luiz"
+    }
+}
+
+buildTypes {
+    release {
+        signingConfig signingConfigs.release
+        minifyEnabled false
+    }
+}
+
     namespace = "com.swiftdrop.app"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
