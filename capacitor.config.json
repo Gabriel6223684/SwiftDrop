@@ -1,0 +1,6 @@
+{
+  "appId": "com.swiftdrop.app",
+  "appName": "SwiftDrop",
+  "webDir": "app/main/",
+  "bundledWebRuntime": false
+}

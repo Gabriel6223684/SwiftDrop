@@ -1,0 +1,15 @@
+{
+  "expo": {
+    "name": "SwiftDrop",
+    "slug": "swiftdrop",
+    "android": {
+      "package": "com.gabriel.swiftdrop"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "a749908b-0fc9-43fa-8925-115892330018"
+      }
+    },
+    "owner": "gabrielmnx"
+  }
+}

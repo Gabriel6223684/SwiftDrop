@@ -1,10 +1,48 @@
 {
   "name": "swiftdrop",
   "version": "1.0.0",
+  "description": "SwiftDrop Desktop App com Express e Electron",
+  "homepage": "https://github.com/Gabriel6223684/SwiftDrop#readme",
+  "bugs": {
+    "url": "https://github.com/Gabriel6223684/SwiftDrop/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Gabriel6223684/SwiftDrop.git"
+  },
+  "license": "MIT",
+  "author": "GABRIEL LUIZ DA SILVA",
   "main": "app/main/main.js",
   "scripts": {
     "start": "electron .",
-    "build": "electron-builder"
+    "dev": "nodemon app/server/server.js",
+    "electron-dev": "concurrently \"npm run dev\" \"electron .\"",
+    "desktop-build": "electron-builder",
+    "build": "vite build",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.3.4",
+    "@capacitor/cli": "^8.3.4",
+    "@capacitor/core": "^8.3.4",
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "express": "^5.2.1",
+    "helmet": "^8.1.0",
+    "morgan": "^1.10.0",
+    "nodemailer": "^8.0.3",
+    "sqlite": "^5.1.1",
+    "sqlite3": "^6.0.1"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.1",
+    "electron": "^41.0.3",
+    "electron-build": "^0.0.3",
+    "electron-builder": "^26.8.1",
+    "nodemon": "^3.1.10",
+    "npm": "^11.14.1",
+    "vite": "^8.0.13"
   },
   "build": {
     "appId": "com.swiftdrop.app",
@@ -13,21 +51,19 @@
       "output": "dist"
     },
     "win": {
-      "target": "nsis"
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
     },
     "files": [
       "app/**/*",
       "node_modules/**/*",
       "package.json"
     ]
-  },
-  "devDependencies": {
-    "electron": "^41.0.3",
-    "electron-builder": "^26.8.1"
-  },
-  "dependencies": {
-    "bcryptjs": "^3.0.3",
-    "nodemailer": "^8.0.3",
-    "pg": "^8.20.0"
   }
 }
