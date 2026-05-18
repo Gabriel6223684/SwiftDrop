@@ -105,7 +105,7 @@ app.get("/", (req, res) => {
 app.get("/download/mobile/app-debug.apk", (req, res) => {
   const filePath = path.join(
     __dirname,
-    "android/app/build/outputs/apk/debug/app-debug.apk",
+    "android/app/build/outputs/apk/debug/app-release-unsigned.apk",
   );
 
   if (!fs.existsSync(filePath)) {
